@@ -1,1 +1,47 @@
+const form = document.getElementById("uploadForm");
+const videosDiv = document.getElementById("videos");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = new FormData(form);
+  const res = await fetch("/upload", { method: "POST", body: data });
+  const json = await res.json();
+  alert(json.message);
+  loadVideos();
+});
+
+async function loadVideos() {
+  const res = await fetch("/videos");
+  const videos = await res.json();
+  videosDiv.innerHTML = videos
+    .map(
+      (v) => `
+      <div class="p-3 bg-gray-700 my-2 rounded">
+        <b>${v.title}</b>
+        <p>${v.approved ? "✅ تمت الموافقة" : "⌛ بانتظار الموافقة"}</p>
+        ${
+          !v.approved
+            ? `<button onclick="approveVideo(${v.id})" class="bg-green-600 p-1 rounded mt-2">موافقة</button>`
+            : `<button onclick="uploadToYouTube(${v.id})" class="bg-blue-600 p-1 rounded mt-2">رفع لليوتيوب</button>`
+        }
+      </div>`
+    )
+    .join("");
+}
+
+async function approveVideo(id) {
+  const res = await fetch(`/approve/${id}`, { method: "POST" });
+  const json = await res.json();
+  alert(json.message);
+  loadVideos();
+}
+
+async function uploadToYouTube(id) {
+  const res = await fetch(`/upload-youtube/${id}`, { method: "POST" });
+  const json = await res.json();
+  alert(json.message);
+  loadVideos();
+}
+
+loadVideos();
 
